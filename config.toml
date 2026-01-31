@@ -1,0 +1,115 @@
+[database]
+url = "postgres://chainwatch:password@localhost:5432/chainwatch"
+max_connections = 20
+
+# ============================================================
+# Ethereum Mainnet (Layer 1)
+# ============================================================
+[[chains]]
+name = "ethereum"
+chain_id = 1
+rpc_http = "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_ws = "wss://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+start_block = 18000000
+batch_size = 50
+poll_interval_ms = 12000
+max_reorg_depth = 64
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "DAI"
+address = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "EURC"
+address = "0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c"
+decimals = 6
+
+# ============================================================
+# Base (Layer 2)
+# ============================================================
+[[chains]]
+name = "base"
+chain_id = 8453
+rpc_http = "https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_ws = "wss://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+start_block = 1000000
+batch_size = 200
+poll_interval_ms = 2000
+max_reorg_depth = 16
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDbC"
+address = "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA"
+decimals = 6
+
+# ============================================================
+# Arbitrum One (Layer 2)
+# ============================================================
+[[chains]]
+name = "arbitrum"
+chain_id = 42161
+rpc_http = "https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_ws = "wss://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+start_block = 150000000
+batch_size = 500
+poll_interval_ms = 1000
+max_reorg_depth = 16
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "DAI"
+address = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+decimals = 18
+
+# ============================================================
+# Optimism (Layer 2)
+# ============================================================
+[[chains]]
+name = "optimism"
+chain_id = 10
+rpc_http = "https://opt-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_ws = "wss://opt-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+start_block = 100000000
+batch_size = 200
+poll_interval_ms = 2000
+max_reorg_depth = 16
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "DAI"
+address = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+decimals = 18
