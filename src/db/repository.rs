@@ -1,6 +1,3 @@
-use alloy::primitives::B256;
-use bigdecimal::BigDecimal;
-use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 
 use crate::indexer::types::StablecoinTransfer;

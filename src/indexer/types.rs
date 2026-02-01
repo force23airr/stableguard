@@ -1,4 +1,4 @@
-use alloy::primitives::{Address, B256};
+use alloy::primitives::B256;
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, Utc};
 

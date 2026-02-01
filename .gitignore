@@ -1,3 +1,6 @@
 /target
 *.env
 .env.*
+config.toml
+.claude/
+nul

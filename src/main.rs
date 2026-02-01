@@ -1,9 +1,14 @@
+use std::sync::Arc;
+
 use sqlx::postgres::PgPoolOptions;
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 use tracing_subscriber::EnvFilter;
 
 use chainwatch_indexer::config::Config;
 use chainwatch_indexer::indexer::chain::run_chain_indexer;
+use chainwatch_indexer::onramp::registry::{seed_fiat_currencies, seed_onramp_providers};
+use chainwatch_indexer::pipeline::TransferPipeline;
 use chainwatch_indexer::tokens::registry::seed_known_tokens;
 
 #[tokio::main]
@@ -53,6 +58,29 @@ async fn main() -> eyre::Result<()> {
     seed_known_tokens(&pool, &config.chains).await?;
     tracing::info!("Known tokens seeded");
 
+    // Seed on-ramp providers and fiat currency registry
+    if !config.onramp_providers.is_empty() {
+        seed_onramp_providers(&pool, &config.onramp_providers).await?;
+        tracing::info!(
+            providers = config.onramp_providers.len(),
+            "On-ramp providers seeded"
+        );
+    }
+
+    if !config.fiat_currencies.is_empty() {
+        seed_fiat_currencies(&pool, &config.fiat_currencies).await?;
+        tracing::info!(
+            currencies = config.fiat_currencies.len(),
+            "Fiat currency registry seeded"
+        );
+    }
+
+    // Initialize the enrichment pipeline (entity labels, wallet tracker, anomaly engine)
+    let pipeline = Arc::new(Mutex::new(
+        TransferPipeline::init(&pool, &config).await?,
+    ));
+    tracing::info!("Enrichment pipeline initialized");
+
     // Create shutdown signal
     let shutdown = CancellationToken::new();
 
@@ -61,10 +89,11 @@ async fn main() -> eyre::Result<()> {
     for chain_config in config.chains {
         let pool = pool.clone();
         let shutdown = shutdown.clone();
+        let pipeline = pipeline.clone();
         let chain_name = chain_config.name.clone();
 
         let handle = tokio::spawn(async move {
-            if let Err(e) = run_chain_indexer(chain_config, pool, shutdown).await {
+            if let Err(e) = run_chain_indexer(chain_config, pool, shutdown, pipeline).await {
                 tracing::error!(chain = %chain_name, error = %e, "Chain indexer failed");
             }
         });

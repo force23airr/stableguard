@@ -1,9 +1,18 @@
 use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub database: DatabaseConfig,
     pub chains: Vec<ChainConfig>,
+    #[serde(default)]
+    pub onramp_providers: Vec<OnrampProviderConfig>,
+    #[serde(default)]
+    pub fiat_currencies: Vec<FiatCurrencyConfig>,
+    #[serde(default)]
+    pub entity_attribution: EntityAttributionConfig,
+    #[serde(default)]
+    pub anomaly_detection: AnomalyDetectionConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -50,6 +59,196 @@ pub struct TokenConfig {
     pub symbol: String,
     pub address: String,
     pub decimals: u8,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct OnrampProviderConfig {
+    pub name: String,
+    pub provider_type: String,
+    pub website: Option<String>,
+    #[serde(default)]
+    pub supported_fiat: Vec<String>,
+    #[serde(default = "default_kyc_required")]
+    pub kyc_required: bool,
+    pub wallets: Option<Vec<ProviderWalletConfig>>,
+}
+
+fn default_kyc_required() -> bool {
+    true
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ProviderWalletConfig {
+    pub chain: String,
+    pub address: String,
+    pub label: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct FiatCurrencyConfig {
+    pub code: String,
+    pub name: String,
+    pub country: String,
+    pub region: String,
+    pub primary_stablecoin: String,
+    #[serde(default = "default_risk_tier")]
+    pub risk_tier: String,
+}
+
+fn default_risk_tier() -> String {
+    "medium".to_string()
+}
+
+// ============================================================
+// Entity Attribution Config
+// ============================================================
+
+#[derive(Debug, Deserialize, Clone, Default)]
+pub struct EntityAttributionConfig {
+    pub ofac_sdn_path: Option<String>,
+    pub custom_watchlist_path: Option<String>,
+    #[serde(default)]
+    pub manual_labels: Vec<ManualLabelConfig>,
+    #[serde(default)]
+    pub custom_watchlists: Vec<CustomWatchlistConfig>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ManualLabelConfig {
+    pub address: String,
+    pub chain_id: Option<i64>,
+    pub entity_name: String,
+    pub entity_type: String,
+    #[serde(default = "default_confidence")]
+    pub confidence: f32,
+    #[serde(default = "default_label_source")]
+    pub source: String,
+}
+
+fn default_confidence() -> f32 {
+    1.0
+}
+
+fn default_label_source() -> String {
+    "config".to_string()
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct CustomWatchlistConfig {
+    pub name: String,
+    pub file_path: String,
+}
+
+// ============================================================
+// Anomaly Detection Config
+// ============================================================
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct AnomalyDetectionConfig {
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub large_transfer_thresholds: HashMap<String, f64>,
+    #[serde(default)]
+    pub velocity: VelocityConfig,
+    #[serde(default)]
+    pub round_number: RoundNumberConfig,
+    #[serde(default)]
+    pub new_wallet: NewWalletAnomalyConfig,
+    #[serde(default)]
+    pub cross_chain: CrossChainConfig,
+}
+
+impl Default for AnomalyDetectionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            large_transfer_thresholds: HashMap::new(),
+            velocity: VelocityConfig::default(),
+            round_number: RoundNumberConfig::default(),
+            new_wallet: NewWalletAnomalyConfig::default(),
+            cross_chain: CrossChainConfig::default(),
+        }
+    }
+}
+
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct VelocityConfig {
+    #[serde(default = "default_velocity_window")]
+    pub window_secs: u64,
+    #[serde(default = "default_velocity_max")]
+    pub max_transfers: u32,
+}
+
+impl Default for VelocityConfig {
+    fn default() -> Self {
+        Self {
+            window_secs: 3600,
+            max_transfers: 10,
+        }
+    }
+}
+
+fn default_velocity_window() -> u64 {
+    3600
+}
+
+fn default_velocity_max() -> u32 {
+    10
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct RoundNumberConfig {
+    #[serde(default = "default_round_tolerance")]
+    pub tolerance: f64,
+}
+
+impl Default for RoundNumberConfig {
+    fn default() -> Self {
+        Self { tolerance: 0.01 }
+    }
+}
+
+fn default_round_tolerance() -> f64 {
+    0.01
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct NewWalletAnomalyConfig {
+    #[serde(default = "default_new_wallet_threshold")]
+    pub threshold_usd: f64,
+}
+
+impl Default for NewWalletAnomalyConfig {
+    fn default() -> Self {
+        Self {
+            threshold_usd: 10000.0,
+        }
+    }
+}
+
+fn default_new_wallet_threshold() -> f64 {
+    10000.0
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct CrossChainConfig {
+    #[serde(default = "default_cross_chain_window")]
+    pub window_secs: u64,
+}
+
+impl Default for CrossChainConfig {
+    fn default() -> Self {
+        Self { window_secs: 1800 }
+    }
+}
+
+fn default_cross_chain_window() -> u64 {
+    1800
 }
 
 impl Config {
@@ -128,6 +327,10 @@ decimals = 6
                 max_connections: 5,
             },
             chains: vec![],
+            onramp_providers: vec![],
+            fiat_currencies: vec![],
+            entity_attribution: EntityAttributionConfig::default(),
+            anomaly_detection: AnomalyDetectionConfig::default(),
         };
         assert!(config.validate().is_err());
     }
@@ -154,6 +357,10 @@ decimals = 6
                     decimals: 6,
                 }],
             }],
+            onramp_providers: vec![],
+            fiat_currencies: vec![],
+            entity_attribution: EntityAttributionConfig::default(),
+            anomaly_detection: AnomalyDetectionConfig::default(),
         };
         assert!(config.validate().is_err());
     }

@@ -1,17 +1,20 @@
-use alloy::primitives::{Address, B256};
+use alloy::primitives::Address;
 use alloy::providers::{Provider, ProviderBuilder, WsConnect};
 use alloy::rpc::types::{BlockNumberOrTag, Filter};
 use chrono::{DateTime, Utc};
 use futures::StreamExt;
 use sqlx::PgPool;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 use crate::config::ChainConfig;
 use crate::db::repository;
 use crate::indexer::decoder;
-use crate::indexer::types::{BlockInfo, StablecoinTransfer, TokenMeta};
+use crate::indexer::types::{StablecoinTransfer, TokenMeta};
+use crate::pipeline::TransferPipeline;
 use crate::tokens::registry::build_watched_tokens;
 
 /// Main entry point for a single chain's indexer task.
@@ -20,6 +23,7 @@ pub async fn run_chain_indexer(
     config: ChainConfig,
     pool: PgPool,
     shutdown: CancellationToken,
+    pipeline: Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     let chain_id = config.chain_id as i64;
     tracing::info!(chain = %config.name, chain_id, "Starting chain indexer");
@@ -47,14 +51,14 @@ pub async fn run_chain_indexer(
     if let Some(start) = start_block {
         if !shutdown.is_cancelled() {
             tracing::info!(chain = %config.name, start_block = start, "Starting backfill");
-            backfill(&config, &pool, &watched_tokens, start, &shutdown).await?;
+            backfill(&config, &pool, &watched_tokens, start, &shutdown, &pipeline).await?;
         }
     }
 
     // Phase 2: Live indexing
     if !shutdown.is_cancelled() {
         tracing::info!(chain = %config.name, "Switching to live indexing");
-        live_index(&config, &pool, &watched_tokens, &shutdown).await?;
+        live_index(&config, &pool, &watched_tokens, &shutdown, &pipeline).await?;
     }
 
     tracing::info!(chain = %config.name, "Chain indexer stopped");
@@ -68,9 +72,10 @@ async fn backfill(
     watched_tokens: &HashMap<Address, TokenMeta>,
     start_block: u64,
     shutdown: &CancellationToken,
+    pipeline: &Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     let provider = ProviderBuilder::new()
-        .on_http(config.rpc_http.parse().map_err(|e| eyre::eyre!("Invalid RPC URL: {}", e))?);
+        .connect_http(config.rpc_http.parse().map_err(|e| eyre::eyre!("Invalid RPC URL: {}", e))?);
 
     let chain_tip = retry_rpc(|| provider.get_block_number()).await?;
     let batch_size = config.batch_size;
@@ -116,8 +121,8 @@ async fn backfill(
         for log in &logs {
             if let Some(block_num) = log.block_number {
                 if !block_timestamps.contains_key(&block_num) {
-                    let block = retry_rpc(|| {
-                        provider.get_block_by_number(BlockNumberOrTag::Number(block_num))
+                    let block = retry_rpc(|| async {
+                        provider.get_block_by_number(BlockNumberOrTag::Number(block_num)).await
                     })
                     .await?;
 
@@ -166,6 +171,20 @@ async fn backfill(
                 "Inserting transfers"
             );
             repository::insert_transfers_batch(pool, &transfers).await?;
+
+            // Run enrichment pipeline
+            let mut pl = pipeline.lock().await;
+            let result = pl.enrich(pool, &config.name, &transfers).await?;
+            if result.anomalies_detected > 0 || result.entities_attributed > 0 {
+                tracing::info!(
+                    chain = %config.name,
+                    entities = result.entities_attributed,
+                    new_wallets = result.new_wallets_found,
+                    anomalies = result.anomalies_detected,
+                    edges = result.graph_edges_updated,
+                    "Enrichment complete"
+                );
+            }
         }
 
         // Update checkpoint
@@ -184,9 +203,10 @@ async fn live_index(
     pool: &PgPool,
     watched_tokens: &HashMap<Address, TokenMeta>,
     shutdown: &CancellationToken,
+    pipeline: &Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     if let Some(ws_url) = &config.rpc_ws {
-        match live_index_ws(config, ws_url, pool, watched_tokens, shutdown).await {
+        match live_index_ws(config, ws_url, pool, watched_tokens, shutdown, pipeline).await {
             Ok(()) => return Ok(()),
             Err(e) => {
                 tracing::warn!(
@@ -198,7 +218,7 @@ async fn live_index(
         }
     }
 
-    live_index_http(config, pool, watched_tokens, shutdown).await
+    live_index_http(config, pool, watched_tokens, shutdown, pipeline).await
 }
 
 /// Live indexing via WebSocket block subscription.
@@ -208,9 +228,10 @@ async fn live_index_ws(
     pool: &PgPool,
     watched_tokens: &HashMap<Address, TokenMeta>,
     shutdown: &CancellationToken,
+    pipeline: &Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     let ws = WsConnect::new(ws_url);
-    let provider = ProviderBuilder::new().on_ws(ws).await?;
+    let provider = ProviderBuilder::new().connect_ws(ws).await?;
 
     let sub = provider.subscribe_blocks().await?;
     let mut stream = sub.into_stream();
@@ -223,7 +244,7 @@ async fn live_index_ws(
                 match maybe_block {
                     Some(block_header) => {
                         if let Err(e) = process_new_block(
-                            &provider, pool, watched_tokens, config, &block_header
+                            &provider, pool, watched_tokens, config, &block_header, pipeline
                         ).await {
                             tracing::error!(
                                 chain = %config.name,
@@ -255,9 +276,10 @@ async fn live_index_http(
     pool: &PgPool,
     watched_tokens: &HashMap<Address, TokenMeta>,
     shutdown: &CancellationToken,
+    pipeline: &Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     let provider = ProviderBuilder::new()
-        .on_http(config.rpc_http.parse().map_err(|e| eyre::eyre!("Invalid RPC URL: {}", e))?);
+        .connect_http(config.rpc_http.parse().map_err(|e| eyre::eyre!("Invalid RPC URL: {}", e))?);
 
     let poll_interval = Duration::from_millis(config.poll_interval_ms);
     let mut last_block = retry_rpc(|| provider.get_block_number()).await?;
@@ -295,14 +317,14 @@ async fn live_index_http(
                 break;
             }
 
-            let block = retry_rpc(|| {
-                provider.get_block_by_number(BlockNumberOrTag::Number(block_num))
+            let block = retry_rpc(|| async {
+                provider.get_block_by_number(BlockNumberOrTag::Number(block_num)).await
             })
             .await?;
 
             if let Some(block) = block {
                 if let Err(e) = process_new_block(
-                    &provider, pool, watched_tokens, config, &block.header
+                    &provider, pool, watched_tokens, config, &block.header, pipeline
                 ).await {
                     tracing::error!(
                         chain = %config.name,
@@ -320,13 +342,14 @@ async fn live_index_http(
     Ok(())
 }
 
-/// Process a single new block: detect reorgs, fetch logs, decode, insert.
+/// Process a single new block: detect reorgs, fetch logs, decode, insert, enrich.
 async fn process_new_block<P: Provider>(
     provider: &P,
     pool: &PgPool,
     watched_tokens: &HashMap<Address, TokenMeta>,
     config: &ChainConfig,
     block_header: &alloy::consensus::Header,
+    pipeline: &Arc<Mutex<TransferPipeline>>,
 ) -> eyre::Result<()> {
     let chain_id = config.chain_id as i64;
     let block_number = block_header.number;
@@ -400,6 +423,21 @@ async fn process_new_block<P: Provider>(
     // Insert transfers
     if !transfers.is_empty() {
         repository::insert_transfers_batch(pool, &transfers).await?;
+
+        // Run enrichment pipeline
+        let mut pl = pipeline.lock().await;
+        let result = pl.enrich(pool, &config.name, &transfers).await?;
+        if result.anomalies_detected > 0 || result.entities_attributed > 0 {
+            tracing::info!(
+                chain = %config.name,
+                block = block_number,
+                entities = result.entities_attributed,
+                new_wallets = result.new_wallets_found,
+                anomalies = result.anomalies_detected,
+                edges = result.graph_edges_updated,
+                "Enrichment complete"
+            );
+        }
     }
 
     // Store block hash for future reorg detection
