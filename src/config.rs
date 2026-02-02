@@ -13,6 +13,8 @@ pub struct Config {
     pub entity_attribution: EntityAttributionConfig,
     #[serde(default)]
     pub anomaly_detection: AnomalyDetectionConfig,
+    #[serde(default)]
+    pub api: ApiConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -40,6 +42,8 @@ pub struct ChainConfig {
     #[serde(default = "default_max_reorg_depth")]
     pub max_reorg_depth: u64,
     pub tokens: Vec<TokenConfig>,
+    #[serde(default = "default_true")]
+    pub decode_defi: bool,
 }
 
 fn default_batch_size() -> u64 {
@@ -251,6 +255,40 @@ fn default_cross_chain_window() -> u64 {
     1800
 }
 
+// ============================================================
+// API Config
+// ============================================================
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ApiConfig {
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default = "default_api_port")]
+    pub port: u16,
+    #[serde(default = "default_api_host")]
+    pub host: String,
+    pub exchange_wallets_path: Option<String>,
+}
+
+impl Default for ApiConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            port: 3000,
+            host: "0.0.0.0".to_string(),
+            exchange_wallets_path: None,
+        }
+    }
+}
+
+fn default_api_port() -> u16 {
+    3000
+}
+
+fn default_api_host() -> String {
+    "0.0.0.0".to_string()
+}
+
 impl Config {
     pub fn load(path: &str) -> eyre::Result<Self> {
         let content = std::fs::read_to_string(path)
@@ -331,6 +369,7 @@ decimals = 6
             fiat_currencies: vec![],
             entity_attribution: EntityAttributionConfig::default(),
             anomaly_detection: AnomalyDetectionConfig::default(),
+            api: ApiConfig::default(),
         };
         assert!(config.validate().is_err());
     }
@@ -356,11 +395,13 @@ decimals = 6
                     address: "not-an-address".to_string(),
                     decimals: 6,
                 }],
+                decode_defi: true,
             }],
             onramp_providers: vec![],
             fiat_currencies: vec![],
             entity_attribution: EntityAttributionConfig::default(),
             anomaly_detection: AnomalyDetectionConfig::default(),
+            api: ApiConfig::default(),
         };
         assert!(config.validate().is_err());
     }

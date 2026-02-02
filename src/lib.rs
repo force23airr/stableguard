@@ -1,4 +1,5 @@
 pub mod anomaly;
+pub mod api;
 pub mod config;
 pub mod db;
 pub mod entity;
@@ -6,5 +7,6 @@ pub mod graph;
 pub mod indexer;
 pub mod onramp;
 pub mod pipeline;
+pub mod seed;
 pub mod tokens;
 pub mod wallet;

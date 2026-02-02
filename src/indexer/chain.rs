@@ -1,10 +1,10 @@
-use alloy::primitives::Address;
+use alloy::primitives::{Address, B256};
 use alloy::providers::{Provider, ProviderBuilder, WsConnect};
 use alloy::rpc::types::{BlockNumberOrTag, Filter};
 use chrono::{DateTime, Utc};
 use futures::StreamExt;
 use sqlx::PgPool;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -13,6 +13,8 @@ use tokio_util::sync::CancellationToken;
 use crate::config::ChainConfig;
 use crate::db::repository;
 use crate::indexer::decoder;
+use crate::indexer::defi_decoder;
+use crate::indexer::receipt_fetcher;
 use crate::indexer::types::{StablecoinTransfer, TokenMeta};
 use crate::pipeline::TransferPipeline;
 use crate::tokens::registry::build_watched_tokens;
@@ -183,6 +185,55 @@ async fn backfill(
                     anomalies = result.anomalies_detected,
                     edges = result.graph_edges_updated,
                     "Enrichment complete"
+                );
+            }
+        }
+
+        // Fetch receipts and decode DeFi events
+        if config.decode_defi && !transfers.is_empty() {
+            let unique_tx_hashes: Vec<B256> = transfers
+                .iter()
+                .map(|t| B256::from_slice(&t.tx_hash))
+                .collect::<HashSet<_>>()
+                .into_iter()
+                .collect();
+
+            if unique_tx_hashes.len() <= 100 {
+                match receipt_fetcher::fetch_receipts_for_txs(&provider, &unique_tx_hashes, 50).await {
+                    Ok(receipt_logs) => {
+                        let all_receipt_logs: Vec<_> = receipt_logs
+                            .iter()
+                            .flat_map(|(_, logs)| logs.iter())
+                            .cloned()
+                            .collect();
+
+                        // Use the most common timestamp from the batch
+                        let batch_timestamp = block_timestamps.values().next().copied().unwrap_or_default();
+                        let defi_events = defi_decoder::decode_defi_logs(&all_receipt_logs, batch_timestamp, chain_id);
+
+                        if !defi_events.is_empty() {
+                            tracing::info!(
+                                chain = %config.name,
+                                defi_events = defi_events.len(),
+                                receipts = receipt_logs.len(),
+                                "Decoded DeFi events from receipts"
+                            );
+                            repository::insert_defi_events_batch(pool, &defi_events).await?;
+                        }
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            chain = %config.name,
+                            error = %e,
+                            "Failed to fetch receipts for DeFi decoding, continuing"
+                        );
+                    }
+                }
+            } else {
+                tracing::debug!(
+                    chain = %config.name,
+                    tx_count = unique_tx_hashes.len(),
+                    "Skipping DeFi decoding: too many unique txs in batch"
                 );
             }
         }
@@ -373,12 +424,14 @@ async fn process_new_block<P: Provider>(
                 let fork_block = find_fork_point(pool, chain_id, block_number, config.max_reorg_depth).await?;
 
                 let deleted = repository::delete_transfers_from_block(pool, chain_id, fork_block as i64).await?;
+                let deleted_defi = repository::delete_defi_events_from_block(pool, chain_id, fork_block as i64).await?;
                 repository::delete_block_hashes_from(pool, chain_id, fork_block as i64).await?;
 
                 tracing::info!(
                     chain = %config.name,
                     fork_block,
                     deleted_transfers = deleted,
+                    deleted_defi_events = deleted_defi,
                     "Reorg rollback complete"
                 );
 
@@ -437,6 +490,46 @@ async fn process_new_block<P: Provider>(
                 edges = result.graph_edges_updated,
                 "Enrichment complete"
             );
+        }
+    }
+
+    // Fetch receipts and decode DeFi events for live blocks
+    if config.decode_defi && !transfers.is_empty() {
+        let unique_tx_hashes: Vec<B256> = transfers
+            .iter()
+            .map(|t| B256::from_slice(&t.tx_hash))
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        match receipt_fetcher::fetch_receipts_for_txs(provider, &unique_tx_hashes, 50).await {
+            Ok(receipt_logs) => {
+                let all_receipt_logs: Vec<_> = receipt_logs
+                    .iter()
+                    .flat_map(|(_, logs)| logs.iter())
+                    .cloned()
+                    .collect();
+
+                let defi_events = defi_decoder::decode_defi_logs(&all_receipt_logs, timestamp, chain_id);
+
+                if !defi_events.is_empty() {
+                    tracing::info!(
+                        chain = %config.name,
+                        block = block_number,
+                        defi_events = defi_events.len(),
+                        "Decoded DeFi events from receipts"
+                    );
+                    repository::insert_defi_events_batch(pool, &defi_events).await?;
+                }
+            }
+            Err(e) => {
+                tracing::warn!(
+                    chain = %config.name,
+                    block = block_number,
+                    error = %e,
+                    "Failed to fetch receipts for DeFi decoding, continuing"
+                );
+            }
         }
     }
 
@@ -505,7 +598,7 @@ async fn find_fork_point(
 
 /// Retry an async operation with exponential backoff.
 /// Handles transient RPC errors (rate limits, network issues).
-async fn retry_rpc<F, Fut, T, E>(mut f: F) -> eyre::Result<T>
+pub async fn retry_rpc<F, Fut, T, E>(mut f: F) -> eyre::Result<T>
 where
     F: FnMut() -> Fut,
     Fut: std::future::Future<Output = Result<T, E>>,

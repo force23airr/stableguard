@@ -1,0 +1,75 @@
+[
+  {
+    "provider": "coinbase",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0x71660c4005BA85c37ccec55d0C4493E66Fe775d3", "label": "Coinbase Commerce" },
+      { "address": "0xA9D1e08C7793af67e9d92fe308d5697FB81d3E43", "label": "Coinbase 10" },
+      { "address": "0x503828976D22510aad0201ac7EC88293211D23Da", "label": "Coinbase 1" },
+      { "address": "0xddfAbCdc4D8FfC6d5beaf154f18B778f892A0740", "label": "Coinbase 3" },
+      { "address": "0x3cD751E6b0078Be393132286c442345e68FF0aaa", "label": "Coinbase 4" },
+      { "address": "0xb5d85CBf7cB3EE0D56b3bB207D5Fc4B82f43F511", "label": "Coinbase 5" },
+      { "address": "0xEB2629a2734e272Bcc07BDA959863f316F4bD4Cf", "label": "Coinbase 6" }
+    ]
+  },
+  {
+    "provider": "binance",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0x28C6c06298d514Db089934071355E5743bf21d60", "label": "Binance 14" },
+      { "address": "0x21a31Ee1afC51d94C2eFcCAa2092aD1028285549", "label": "Binance 15" },
+      { "address": "0xDFd5293D8e347dFe59E90eFd55b2956a1343963d", "label": "Binance 16" },
+      { "address": "0x56Eddb7aa87536c09CCc2793473599fD21A8b17F", "label": "Binance 17" },
+      { "address": "0xF977814e90dA44bFA03b6295A0616a897441aceC", "label": "Binance 8" },
+      { "address": "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE", "label": "Binance 1" },
+      { "address": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8", "label": "Binance 7" }
+    ]
+  },
+  {
+    "provider": "kraken",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2", "label": "Kraken 13" },
+      { "address": "0xDA9dfA130Df4dE4673b89022EE50ff26f6EA73Cf", "label": "Kraken 2" },
+      { "address": "0xAe2D4617c862309A3d75A0fFB358c7a5009c673F", "label": "Kraken 3" }
+    ]
+  },
+  {
+    "provider": "okx",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b", "label": "OKX Hot Wallet" },
+      { "address": "0x236F9F97e0E62388479bf9E5BA4889e46B0273C3", "label": "OKX 2" }
+    ]
+  },
+  {
+    "provider": "kucoin",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c", "label": "KuCoin Hot Wallet" },
+      { "address": "0xf16E9B0D03470827A95CDfd0Cb8a8A3b46969B91", "label": "KuCoin 2" }
+    ]
+  },
+  {
+    "provider": "bybit",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0xf89d7b9c864f589bbF53a82105107622B35EaA40", "label": "Bybit Hot Wallet" }
+    ]
+  },
+  {
+    "provider": "gemini",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "wallets": [
+      { "address": "0xD24400ae8BfEBb18cA49Be86258a3C749cf46853", "label": "Gemini 4" },
+      { "address": "0x6Fc82a5fe25A5cDb58BC74600A40A69C065263f8", "label": "Gemini 6" }
+    ]
+  }
+]

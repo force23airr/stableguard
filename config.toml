@@ -1,6 +1,1016 @@
 [database]
-url = "postgres://chainwatch:password@localhost:5432/chainwatch"
+url = "postgres://postgres:password@localhost:5432/chainwatch"
 max_connections = 20
+
+# ============================================================
+# REST API
+# ============================================================
+[api]
+enabled = true
+port = 3000
+host = "0.0.0.0"
+exchange_wallets_path = "data/exchange_wallets.json"
+
+# ============================================================
+# Entity Attribution
+# ============================================================
+[entity_attribution]
+# ofac_sdn_path = "data/sdn.csv"           # Uncomment when you have the OFAC SDN CSV
+# custom_watchlist_path = "data/watchlist.csv"
+
+# Known sanctioned/mixer addresses (manual labels)
+[[entity_attribution.manual_labels]]
+address = "0xd90e2f925DA726b50C4Ed8D0Fb90Ad053324F31b"
+entity_name = "Tornado Cash: Router"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0x722122dF12D4e14e13Ac3b6895a86e84145b6967"
+entity_name = "Tornado Cash: Proxy"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0xDD4c48C0B24039969fC16D1cdF626eaB821d3384"
+entity_name = "Tornado Cash: 0.1 ETH"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0xd4B88Df4D29F5CedD6857912842cff3b20C8Cfa3"
+entity_name = "Tornado Cash: 100 DAI"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0xFD8610d20aA15b7B2E3Be39B396a1bC3516c7144"
+entity_name = "Tornado Cash: 1000 DAI"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0x07687e702b410Fa43f4cB4Af7FA097918ffD2730"
+entity_name = "Tornado Cash: 10000 DAI"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0x23773E65ed146A459791799d01336DB287f25334"
+entity_name = "Tornado Cash: 100000 DAI"
+entity_type = "mixer"
+confidence = 1.0
+source = "config"
+
+[[entity_attribution.manual_labels]]
+address = "0xba214c1c1928a32Bffe790263E38B4Af9bFCD659"
+entity_name = "Railgun"
+entity_type = "mixer"
+confidence = 0.9
+source = "config"
+
+# ============================================================
+# Anomaly Detection
+# ============================================================
+[anomaly_detection]
+enabled = true
+
+[anomaly_detection.large_transfer_thresholds]
+USDC = 100000.0
+USDT = 100000.0
+DAI = 100000.0
+EURC = 100000.0
+PYUSD = 100000.0
+default = 50000.0
+
+[anomaly_detection.velocity]
+window_secs = 3600
+max_transfers = 10
+
+[anomaly_detection.round_number]
+tolerance = 0.01
+
+[anomaly_detection.new_wallet]
+threshold_usd = 10000.0
+
+[anomaly_detection.cross_chain]
+window_secs = 1800
+
+# ============================================================
+# Fiat On-Ramp Providers
+# Known exchanges and on-ramp services with their deposit wallets
+# ============================================================
+
+[[onramp_providers]]
+name = "coinbase"
+provider_type = "exchange"
+website = "https://coinbase.com"
+supported_fiat = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "SGD", "CHF"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x71660c4005BA85c37ccec55d0C4493E66Fe775d3"
+label = "Coinbase Commerce"
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0xA9D1e08C7793af67e9d92fe308d5697FB81d3E43"
+label = "Coinbase 10"
+
+[[onramp_providers.wallets]]
+chain = "base"
+address = "0x71660c4005BA85c37ccec55d0C4493E66Fe775d3"
+label = "Coinbase Commerce Base"
+
+[[onramp_providers]]
+name = "binance"
+provider_type = "exchange"
+website = "https://binance.com"
+supported_fiat = ["USD", "EUR", "GBP", "BRL", "ARS", "TRY", "NGN", "KES", "ZAR", "INR", "PHP", "VND", "IDR", "THB", "MYR", "AED", "SAR", "EGP", "KRW", "JPY", "AUD", "CAD", "CHF", "CZK", "DKK", "HUF", "NOK", "PLN", "SEK", "RON", "BGN", "HRK", "RUB", "UAH", "KZT", "GEL", "PEN", "CLP", "COP", "MXN", "TWD", "HKD", "SGD", "NZD"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x28C6c06298d514Db089934071355E5743bf21d60"
+label = "Binance 14"
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x21a31Ee1afC51d94C2eFcCAa2092aD1028285549"
+label = "Binance 15"
+
+[[onramp_providers.wallets]]
+chain = "arbitrum"
+address = "0xB38e8c17e38363aF6EbdCb3dAE12e0243582891D"
+label = "Binance Arbitrum"
+
+[[onramp_providers]]
+name = "kraken"
+provider_type = "exchange"
+website = "https://kraken.com"
+supported_fiat = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2"
+label = "Kraken 13"
+
+[[onramp_providers]]
+name = "moonpay"
+provider_type = "onramp"
+website = "https://moonpay.com"
+supported_fiat = ["USD", "EUR", "GBP", "AUD", "CAD", "BRL", "ARS", "MXN", "COP", "CLP", "PEN", "DOP", "CRC", "NGN", "GHS", "KES", "ZAR", "TZS", "UGX", "EGP", "MAD", "TND", "INR", "PKR", "BDT", "LKR", "NPR", "PHP", "VND", "IDR", "THB", "MYR", "KRW", "JPY", "TWD", "HKD", "SGD", "NZD", "TRY", "AED", "SAR", "QAR", "BHD", "KWD", "OMR", "JOD", "ILS", "CHF", "SEK", "NOK", "DKK", "PLN", "CZK", "HUF", "RON", "BGN", "HRK", "ISK"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x8216874887415e2650d12d53Ff53516F04a74FD7"
+label = "MoonPay Hot Wallet"
+
+[[onramp_providers]]
+name = "transak"
+provider_type = "onramp"
+website = "https://transak.com"
+supported_fiat = ["USD", "EUR", "GBP", "INR", "BRL", "ARS", "MXN", "COP", "PEN", "CLP", "NGN", "GHS", "KES", "ZAR", "TZS", "UGX", "EGP", "PKR", "BDT", "PHP", "VND", "IDR", "THB", "MYR", "KRW", "JPY", "TWD", "HKD", "SGD", "AUD", "NZD", "CAD", "TRY", "AED", "SAR", "CHF", "SEK", "NOK", "DKK", "PLN", "CZK", "HUF", "RON"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "ramp_network"
+provider_type = "onramp"
+website = "https://ramp.network"
+supported_fiat = ["USD", "EUR", "GBP", "PLN", "CZK", "SEK", "NOK", "DKK", "CHF", "AUD", "BRL", "MXN", "ARS"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "simplex"
+provider_type = "onramp"
+website = "https://simplex.com"
+supported_fiat = ["USD", "EUR", "GBP", "CAD", "AUD", "BRL", "JPY", "KRW", "INR", "TRY", "NGN", "ZAR"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "mercuryo"
+provider_type = "onramp"
+website = "https://mercuryo.io"
+supported_fiat = ["USD", "EUR", "GBP", "BRL", "TRY", "NGN", "UAH", "KZT", "GEL"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "okx"
+provider_type = "exchange"
+website = "https://okx.com"
+supported_fiat = ["USD", "EUR", "GBP", "BRL", "ARS", "MXN", "COP", "NGN", "KES", "ZAR", "INR", "VND", "PHP", "IDR", "THB", "MYR", "KRW", "JPY", "TWD", "HKD", "TRY", "AED", "RUB", "UAH"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b"
+label = "OKX Hot Wallet"
+
+[[onramp_providers]]
+name = "bybit"
+provider_type = "exchange"
+website = "https://bybit.com"
+supported_fiat = ["USD", "EUR", "GBP", "BRL", "ARS", "TRY", "NGN", "INR", "VND", "PHP", "IDR", "KRW", "JPY", "AED", "RUB", "UAH", "KZT"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0xf89d7b9c864f589bbF53a82105107622B35EaA40"
+label = "Bybit Hot Wallet"
+
+[[onramp_providers]]
+name = "kucoin"
+provider_type = "exchange"
+website = "https://kucoin.com"
+supported_fiat = ["USD", "EUR", "GBP", "AUD", "CAD", "BRL", "NGN", "TRY", "VND", "INR", "PHP"]
+kyc_required = true
+
+[[onramp_providers.wallets]]
+chain = "ethereum"
+address = "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c"
+label = "KuCoin Hot Wallet"
+
+[[onramp_providers]]
+name = "bitso"
+provider_type = "exchange"
+website = "https://bitso.com"
+supported_fiat = ["MXN", "ARS", "BRL", "COP"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "lemon_cash"
+provider_type = "exchange"
+website = "https://lemon.me"
+supported_fiat = ["ARS", "BRL"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "buda"
+provider_type = "exchange"
+website = "https://buda.com"
+supported_fiat = ["CLP", "COP", "PEN", "ARS"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "yellow_card"
+provider_type = "onramp"
+website = "https://yellowcard.io"
+supported_fiat = ["NGN", "GHS", "KES", "ZAR", "TZS", "UGX", "ZMW", "RWF", "BWP", "XOF", "XAF", "CDF", "CMR"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "paxful"
+provider_type = "p2p"
+website = "https://paxful.com"
+supported_fiat = ["NGN", "GHS", "KES", "ZAR", "INR", "PHP", "VND", "USD", "EUR", "GBP", "RUB", "CNY"]
+kyc_required = false
+
+[[onramp_providers]]
+name = "chipper_cash"
+provider_type = "onramp"
+website = "https://chippercash.com"
+supported_fiat = ["NGN", "GHS", "KES", "ZAR", "TZS", "UGX", "RWF"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "wazirx"
+provider_type = "exchange"
+website = "https://wazirx.com"
+supported_fiat = ["INR"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "coindcx"
+provider_type = "exchange"
+website = "https://coindcx.com"
+supported_fiat = ["INR"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "upbit"
+provider_type = "exchange"
+website = "https://upbit.com"
+supported_fiat = ["KRW"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "bithumb"
+provider_type = "exchange"
+website = "https://bithumb.com"
+supported_fiat = ["KRW"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "bitflyer"
+provider_type = "exchange"
+website = "https://bitflyer.com"
+supported_fiat = ["JPY", "USD", "EUR"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "mercado_bitcoin"
+provider_type = "exchange"
+website = "https://mercadobitcoin.com.br"
+supported_fiat = ["BRL"]
+kyc_required = true
+
+[[onramp_providers]]
+name = "ripio"
+provider_type = "exchange"
+website = "https://ripio.com"
+supported_fiat = ["ARS", "BRL", "MXN", "COP", "UYU"]
+kyc_required = true
+
+# ============================================================
+# Fiat Currency Registry
+# Every fiat currency with on-ramp availability to stablecoins
+# ============================================================
+
+# --- Americas ---
+[[fiat_currencies]]
+code = "USD"
+name = "US Dollar"
+country = "United States"
+region = "americas"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "CAD"
+name = "Canadian Dollar"
+country = "Canada"
+region = "americas"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "MXN"
+name = "Mexican Peso"
+country = "Mexico"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "BRL"
+name = "Brazilian Real"
+country = "Brazil"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "ARS"
+name = "Argentine Peso"
+country = "Argentina"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "COP"
+name = "Colombian Peso"
+country = "Colombia"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "CLP"
+name = "Chilean Peso"
+country = "Chile"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "PEN"
+name = "Peruvian Sol"
+country = "Peru"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "UYU"
+name = "Uruguayan Peso"
+country = "Uruguay"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "PYG"
+name = "Paraguayan Guarani"
+country = "Paraguay"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "BOB"
+name = "Bolivian Boliviano"
+country = "Bolivia"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "VES"
+name = "Venezuelan Bolivar"
+country = "Venezuela"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "DOP"
+name = "Dominican Peso"
+country = "Dominican Republic"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "CRC"
+name = "Costa Rican Colon"
+country = "Costa Rica"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "GTQ"
+name = "Guatemalan Quetzal"
+country = "Guatemala"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "HNL"
+name = "Honduran Lempira"
+country = "Honduras"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "JMD"
+name = "Jamaican Dollar"
+country = "Jamaica"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "TTD"
+name = "Trinidad and Tobago Dollar"
+country = "Trinidad and Tobago"
+region = "americas"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+# --- Europe ---
+[[fiat_currencies]]
+code = "EUR"
+name = "Euro"
+country = "Eurozone"
+region = "europe"
+primary_stablecoin = "EURC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "GBP"
+name = "British Pound"
+country = "United Kingdom"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "CHF"
+name = "Swiss Franc"
+country = "Switzerland"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "SEK"
+name = "Swedish Krona"
+country = "Sweden"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "NOK"
+name = "Norwegian Krone"
+country = "Norway"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "DKK"
+name = "Danish Krone"
+country = "Denmark"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "PLN"
+name = "Polish Zloty"
+country = "Poland"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "CZK"
+name = "Czech Koruna"
+country = "Czech Republic"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "HUF"
+name = "Hungarian Forint"
+country = "Hungary"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "RON"
+name = "Romanian Leu"
+country = "Romania"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "BGN"
+name = "Bulgarian Lev"
+country = "Bulgaria"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "HRK"
+name = "Croatian Kuna"
+country = "Croatia"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "ISK"
+name = "Icelandic Krona"
+country = "Iceland"
+region = "europe"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "TRY"
+name = "Turkish Lira"
+country = "Turkey"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "RUB"
+name = "Russian Ruble"
+country = "Russia"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "UAH"
+name = "Ukrainian Hryvnia"
+country = "Ukraine"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "GEL"
+name = "Georgian Lari"
+country = "Georgia"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "KZT"
+name = "Kazakhstani Tenge"
+country = "Kazakhstan"
+region = "europe"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+# --- Africa ---
+[[fiat_currencies]]
+code = "NGN"
+name = "Nigerian Naira"
+country = "Nigeria"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "GHS"
+name = "Ghanaian Cedi"
+country = "Ghana"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "KES"
+name = "Kenyan Shilling"
+country = "Kenya"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "ZAR"
+name = "South African Rand"
+country = "South Africa"
+region = "africa"
+primary_stablecoin = "USDC"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "TZS"
+name = "Tanzanian Shilling"
+country = "Tanzania"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "UGX"
+name = "Ugandan Shilling"
+country = "Uganda"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "RWF"
+name = "Rwandan Franc"
+country = "Rwanda"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "ZMW"
+name = "Zambian Kwacha"
+country = "Zambia"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "BWP"
+name = "Botswana Pula"
+country = "Botswana"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "EGP"
+name = "Egyptian Pound"
+country = "Egypt"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "MAD"
+name = "Moroccan Dirham"
+country = "Morocco"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "TND"
+name = "Tunisian Dinar"
+country = "Tunisia"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "XOF"
+name = "West African CFA Franc"
+country = "WAEMU (8 countries)"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "XAF"
+name = "Central African CFA Franc"
+country = "CEMAC (6 countries)"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "CDF"
+name = "Congolese Franc"
+country = "DR Congo"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "ETB"
+name = "Ethiopian Birr"
+country = "Ethiopia"
+region = "africa"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+# --- Asia Pacific ---
+[[fiat_currencies]]
+code = "JPY"
+name = "Japanese Yen"
+country = "Japan"
+region = "asia_pacific"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "KRW"
+name = "South Korean Won"
+country = "South Korea"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "AUD"
+name = "Australian Dollar"
+country = "Australia"
+region = "asia_pacific"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "NZD"
+name = "New Zealand Dollar"
+country = "New Zealand"
+region = "asia_pacific"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "SGD"
+name = "Singapore Dollar"
+country = "Singapore"
+region = "asia_pacific"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "HKD"
+name = "Hong Kong Dollar"
+country = "Hong Kong"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "TWD"
+name = "Taiwan Dollar"
+country = "Taiwan"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "INR"
+name = "Indian Rupee"
+country = "India"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "PKR"
+name = "Pakistani Rupee"
+country = "Pakistan"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "BDT"
+name = "Bangladeshi Taka"
+country = "Bangladesh"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "LKR"
+name = "Sri Lankan Rupee"
+country = "Sri Lanka"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "NPR"
+name = "Nepalese Rupee"
+country = "Nepal"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+[[fiat_currencies]]
+code = "PHP"
+name = "Philippine Peso"
+country = "Philippines"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "VND"
+name = "Vietnamese Dong"
+country = "Vietnam"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "IDR"
+name = "Indonesian Rupiah"
+country = "Indonesia"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "THB"
+name = "Thai Baht"
+country = "Thailand"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "MYR"
+name = "Malaysian Ringgit"
+country = "Malaysia"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "CNY"
+name = "Chinese Yuan"
+country = "China"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "MMK"
+name = "Myanmar Kyat"
+country = "Myanmar"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "KHR"
+name = "Cambodian Riel"
+country = "Cambodia"
+region = "asia_pacific"
+primary_stablecoin = "USDT"
+risk_tier = "high"
+
+# --- Middle East ---
+[[fiat_currencies]]
+code = "AED"
+name = "UAE Dirham"
+country = "United Arab Emirates"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "SAR"
+name = "Saudi Riyal"
+country = "Saudi Arabia"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "QAR"
+name = "Qatari Riyal"
+country = "Qatar"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "BHD"
+name = "Bahraini Dinar"
+country = "Bahrain"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "KWD"
+name = "Kuwaiti Dinar"
+country = "Kuwait"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "OMR"
+name = "Omani Rial"
+country = "Oman"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "JOD"
+name = "Jordanian Dinar"
+country = "Jordan"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "medium"
+
+[[fiat_currencies]]
+code = "ILS"
+name = "Israeli New Shekel"
+country = "Israel"
+region = "middle_east"
+primary_stablecoin = "USDC"
+risk_tier = "low"
+
+[[fiat_currencies]]
+code = "IQD"
+name = "Iraqi Dinar"
+country = "Iraq"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "IRR"
+name = "Iranian Rial"
+country = "Iran"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "SYP"
+name = "Syrian Pound"
+country = "Syria"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "critical"
+
+[[fiat_currencies]]
+code = "LBP"
+name = "Lebanese Pound"
+country = "Lebanon"
+region = "middle_east"
+primary_stablecoin = "USDT"
+risk_tier = "high"
 
 # ============================================================
 # Ethereum Mainnet (Layer 1)
@@ -8,13 +1018,15 @@ max_connections = 20
 [[chains]]
 name = "ethereum"
 chain_id = 1
-rpc_http = "https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
-rpc_ws = "wss://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_http = "https://eth-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+rpc_ws = "wss://eth-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
 start_block = 18000000
-batch_size = 50
+batch_size = 10
 poll_interval_ms = 12000
 max_reorg_depth = 64
+decode_defi = true
 
+# --- USD-pegged ---
 [[chains.tokens]]
 symbol = "USDC"
 address = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
@@ -31,9 +1043,118 @@ address = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 decimals = 18
 
 [[chains.tokens]]
+symbol = "FRAX"
+address = "0x853d955aCEf822Db058eb8505911ED77F175b99e"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "TUSD"
+address = "0x0000000000085d4780B73119b644AE5ecd22b376"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "BUSD"
+address = "0x4Fabb145d64652a948d72533023f6E7A623C7C53"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "USDP"
+address = "0x8E870D67F660D95d5be530380D0eC0bd388289E1"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "GUSD"
+address = "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd"
+decimals = 2
+
+[[chains.tokens]]
+symbol = "LUSD"
+address = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "sUSD"
+address = "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "DOLA"
+address = "0x865377367054516e17014CcdED1e7d814EDC9ce4"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "MIM"
+address = "0x99D8a9C45b2ecA8864373A26D1459e3Dff1e17F3"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "GHO"
+address = "0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "crvUSD"
+address = "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "PYUSD"
+address = "0x6c3ea9036406852006290770BEdFcAbA0e23A0e8"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDD"
+address = "0x0C10bF8FcB7Bf5412187A595ab97a3609160b5c6"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "FDUSD"
+address = "0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "USDe"
+address = "0x4c9EDD5852cd905f086C759E8383e09bff1E68B3"
+decimals = 18
+
+# --- EUR-pegged ---
+[[chains.tokens]]
 symbol = "EURC"
 address = "0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c"
 decimals = 6
+
+[[chains.tokens]]
+symbol = "EURS"
+address = "0xdB25f211AB05b1c97D595516F45D28E8BfcCc3a7"
+decimals = 2
+
+[[chains.tokens]]
+symbol = "agEUR"
+address = "0x1a7e4e63778B4f12a199C062f3eFdD288afCBce8"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "EURe"
+address = "0x3231Cb76718CDeF2155FC47b5286d82e6eDa273f"
+decimals = 18
+
+# --- GBP-pegged ---
+[[chains.tokens]]
+symbol = "GBPT"
+address = "0x86B4dBE5D203e634a12364C0e428fa242A3FbA98"
+decimals = 18
+
+# --- BRL-pegged ---
+[[chains.tokens]]
+symbol = "BRZ"
+address = "0x4eD141110F6EeeAbA9A1df36d8c26f684d2475Dc"
+decimals = 4
+
+# --- Multi-collateral / algorithmic ---
+[[chains.tokens]]
+symbol = "RAI"
+address = "0x03ab458634910AaD20eF5f1C8ee96F1D6ac54919"
+decimals = 18
 
 # ============================================================
 # Base (Layer 2)
@@ -41,12 +1162,13 @@ decimals = 6
 [[chains]]
 name = "base"
 chain_id = 8453
-rpc_http = "https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
-rpc_ws = "wss://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_http = "https://base-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+rpc_ws = "wss://base-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
 start_block = 1000000
-batch_size = 200
+batch_size = 10
 poll_interval_ms = 2000
 max_reorg_depth = 16
+decode_defi = true
 
 [[chains.tokens]]
 symbol = "USDC"
@@ -58,22 +1180,53 @@ symbol = "USDbC"
 address = "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA"
 decimals = 6
 
+[[chains.tokens]]
+symbol = "DAI"
+address = "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "EURC"
+address = "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "DOLA"
+address = "0x4621b7A9c75199271F773Ebd9A499dbd165c3191"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "USDe"
+address = "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "crvUSD"
+address = "0x417Ac0e078398C154EdFadD9Ef675d30Be60Af93"
+decimals = 18
+
 # ============================================================
 # Arbitrum One (Layer 2)
 # ============================================================
 [[chains]]
 name = "arbitrum"
 chain_id = 42161
-rpc_http = "https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
-rpc_ws = "wss://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_http = "https://arb-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+rpc_ws = "wss://arb-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
 start_block = 150000000
-batch_size = 500
+batch_size = 10
 poll_interval_ms = 1000
 max_reorg_depth = 16
+decode_defi = true
 
 [[chains.tokens]]
 symbol = "USDC"
 address = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDC.e"
+address = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
 decimals = 6
 
 [[chains.tokens]]
@@ -86,22 +1239,58 @@ symbol = "DAI"
 address = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
 decimals = 18
 
+[[chains.tokens]]
+symbol = "FRAX"
+address = "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "LUSD"
+address = "0x93b346b6BC2548dA6A1E7d98E9a421B42541425b"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "MIM"
+address = "0xFEa7a6a0B346362BF88A9e4A88416B77a57D6c2A"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "GHO"
+address = "0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "USDe"
+address = "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "DOLA"
+address = "0x6A7661795C374c0bFC635934efAddFf3A7Ee23b6"
+decimals = 18
+
 # ============================================================
 # Optimism (Layer 2)
 # ============================================================
 [[chains]]
 name = "optimism"
 chain_id = 10
-rpc_http = "https://opt-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
-rpc_ws = "wss://opt-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+rpc_http = "https://opt-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+rpc_ws = "wss://opt-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
 start_block = 100000000
-batch_size = 200
+batch_size = 10
 poll_interval_ms = 2000
 max_reorg_depth = 16
+decode_defi = true
 
 [[chains.tokens]]
 symbol = "USDC"
 address = "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDC.e"
+address = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
 decimals = 6
 
 [[chains.tokens]]
@@ -112,4 +1301,219 @@ decimals = 6
 [[chains.tokens]]
 symbol = "DAI"
 address = "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "FRAX"
+address = "0x2E3D870790dC77A83DD1d18184Acc7439A53f475"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "sUSD"
+address = "0x8c6f28f2F1A3C87F0f938b96d27ac7906c7fBE8B"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "LUSD"
+address = "0xc40F949F8a4e094D1b49a23ea9241D289B7b2819"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "DOLA"
+address = "0x8aE125E8653821E851F12A49F7765db9a9ce7384"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "USDe"
+address = "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"
+decimals = 18
+
+# ============================================================
+# Polygon PoS (Layer 2)
+# ============================================================
+[[chains]]
+name = "polygon"
+chain_id = 137
+rpc_http = "https://polygon-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+rpc_ws = "wss://polygon-mainnet.g.alchemy.com/v2/u4_JdSdchTEWx_WXwfhs_"
+start_block = 50000000
+batch_size = 10
+poll_interval_ms = 2000
+max_reorg_depth = 128
+decode_defi = true
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDC.e"
+address = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "DAI"
+address = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "FRAX"
+address = "0x45c32fA6DF82ead1e2EF74d17b76547EDdFaFF89"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "TUSD"
+address = "0x2e1AD108fF1D8C782fcBbB89AAd783aC49586756"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "MIM"
+address = "0x49a0400587A7F65072c87c4910449fDcC5c47242"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "EURC"
+address = "0x8f3a08cC1a7E54BbB57a1E0EF43D8e6067159386"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "agEUR"
+address = "0xE0B52e49357Fd4DAf2c15e02058DCE6BC0057db4"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "DOLA"
+address = "0xCd8e7322dc2659b1ec447e5d52FDdF2E2FCb3D38"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "BRZ"
+address = "0x491a4eB4f1FC3BfF8E1d2FC856a6A46663aD556f"
+decimals = 4
+
+# ============================================================
+# zkSync Era (Layer 2) — DISABLED: no API key
+# ============================================================
+# [[chains]]
+# name = "zksync"
+# chain_id = 324
+# rpc_http = "https://zksync-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+
+# ============================================================
+# Scroll (Layer 2) — DISABLED: no API key
+# ============================================================
+# [[chains]]
+# name = "scroll"
+# chain_id = 534352
+# rpc_http = "https://scroll-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+
+# ============================================================
+# Linea (Layer 2) — DISABLED: no API key
+# ============================================================
+# [[chains]]
+# name = "linea"
+# chain_id = 59144
+# rpc_http = "https://linea-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+
+# ============================================================
+# Mantle (Layer 2)
+# ============================================================
+[[chains]]
+name = "mantle"
+chain_id = 5000
+rpc_http = "https://rpc.mantle.xyz"
+start_block = 1000000
+batch_size = 200
+poll_interval_ms = 3000
+max_reorg_depth = 16
+decode_defi = true
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDe"
+address = "0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"
+decimals = 18
+
+# ============================================================
+# Blast (Layer 2) — DISABLED: no API key
+# ============================================================
+# [[chains]]
+# name = "blast"
+# chain_id = 81457
+# rpc_http = "https://blast-mainnet.g.alchemy.com/v2/YOUR_API_KEY"
+
+# ============================================================
+# Mode (Layer 2)
+# ============================================================
+[[chains]]
+name = "mode"
+chain_id = 34443
+rpc_http = "https://mainnet.mode.network"
+start_block = 1000000
+batch_size = 200
+poll_interval_ms = 3000
+max_reorg_depth = 16
+decode_defi = true
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0xd988097fb8612cc24eeC14542bC03424c656005f"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0xf0F161fDA2712DB8b566946122a5af183995e2eD"
+decimals = 6
+
+# ============================================================
+# Gnosis (Layer 2 / Sidechain)
+# ============================================================
+[[chains]]
+name = "gnosis"
+chain_id = 100
+rpc_http = "https://rpc.gnosischain.com"
+start_block = 30000000
+batch_size = 200
+poll_interval_ms = 5000
+max_reorg_depth = 64
+decode_defi = true
+
+[[chains.tokens]]
+symbol = "USDC"
+address = "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "USDT"
+address = "0x4ECaBa5870353805a9F068101A40E0f32ed605C6"
+decimals = 6
+
+[[chains.tokens]]
+symbol = "WXDAI"
+address = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "EURe"
+address = "0xcB444e90D8198415266c6a2724b7900fb12FC56E"
+decimals = 18
+
+[[chains.tokens]]
+symbol = "crvUSD"
+address = "0xaBEf652195F98A91E490f047A5006B71c85f058d"
 decimals = 18

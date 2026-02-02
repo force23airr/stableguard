@@ -76,10 +76,36 @@ async fn main() -> eyre::Result<()> {
     }
 
     // Initialize the enrichment pipeline (entity labels, wallet tracker, anomaly engine)
-    let pipeline = Arc::new(Mutex::new(
-        TransferPipeline::init(&pool, &config).await?,
-    ));
+    let mut pipeline = TransferPipeline::init(&pool, &config).await?;
     tracing::info!("Enrichment pipeline initialized");
+
+    // Seed exchange wallets from JSON file
+    if let Some(ref path) = config.api.exchange_wallets_path {
+        match chainwatch_indexer::seed::exchange_wallets::seed_exchange_wallets(
+            &pool,
+            &mut pipeline.entity_store,
+            path,
+        )
+        .await
+        {
+            Ok(count) => tracing::info!(count, "Exchange wallets seeded"),
+            Err(e) => tracing::warn!(error = %e, "Failed to seed exchange wallets, continuing without"),
+        }
+    }
+
+    let pipeline = Arc::new(Mutex::new(pipeline));
+
+    // Spawn API server
+    if config.api.enabled {
+        let api_pool = pool.clone();
+        let host = config.api.host.clone();
+        let port = config.api.port;
+        tokio::spawn(async move {
+            if let Err(e) = chainwatch_indexer::api::serve(api_pool, &host, port).await {
+                tracing::error!(error = %e, "API server failed");
+            }
+        });
+    }
 
     // Create shutdown signal
     let shutdown = CancellationToken::new();

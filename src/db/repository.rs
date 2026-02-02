@@ -1,5 +1,6 @@
 use sqlx::PgPool;
 
+use crate::indexer::defi_decoder::DefiEvent;
 use crate::indexer::types::StablecoinTransfer;
 
 /// Insert a batch of transfers using multi-row INSERT with ON CONFLICT DO NOTHING.
@@ -168,6 +169,63 @@ pub async fn prune_block_hashes(
     .await?;
 
     Ok(())
+}
+
+/// Insert a batch of DeFi events using multi-row INSERT with ON CONFLICT DO NOTHING.
+pub async fn insert_defi_events_batch(
+    pool: &PgPool,
+    events: &[DefiEvent],
+) -> eyre::Result<()> {
+    if events.is_empty() {
+        return Ok(());
+    }
+
+    for chunk in events.chunks(500) {
+        let mut query_builder: sqlx::QueryBuilder<sqlx::Postgres> = sqlx::QueryBuilder::new(
+            "INSERT INTO defi_events (chain_id, block_number, tx_hash, log_index, \
+             protocol, event_type, contract_address, account, token_in, token_out, \
+             amount_in, amount_out, block_timestamp, raw_data) ",
+        );
+
+        query_builder.push_values(chunk, |mut b, e| {
+            b.push_bind(e.chain_id)
+                .push_bind(e.block_number)
+                .push_bind(&e.tx_hash)
+                .push_bind(e.log_index)
+                .push_bind(&e.protocol)
+                .push_bind(&e.event_type)
+                .push_bind(&e.contract_address)
+                .push_bind(&e.account)
+                .push_bind(&e.token_in)
+                .push_bind(&e.token_out)
+                .push_bind(&e.amount_in)
+                .push_bind(&e.amount_out)
+                .push_bind(e.block_timestamp)
+                .push_bind(&e.raw_data);
+        });
+
+        query_builder.push(" ON CONFLICT (chain_id, tx_hash, log_index) DO NOTHING");
+        query_builder.build().execute(pool).await?;
+    }
+
+    Ok(())
+}
+
+/// Delete all DeFi events at or above a block number (reorg rollback).
+pub async fn delete_defi_events_from_block(
+    pool: &PgPool,
+    chain_id: i64,
+    from_block: i64,
+) -> eyre::Result<u64> {
+    let result = sqlx::query(
+        "DELETE FROM defi_events WHERE chain_id = $1 AND block_number >= $2",
+    )
+    .bind(chain_id)
+    .bind(from_block)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected())
 }
 
 /// Seed a known token into the database (idempotent).
